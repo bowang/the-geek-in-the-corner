@@ -70,7 +70,15 @@ int main(int argc, char **argv)
 
   port = ntohs(rdma_get_src_port(listener));
 
-  printf("listening on port %d.\n", port);
+#if _USE_IPV6
+  char addr_buffer[46];
+  inet_ntop(AF_INET6, &(addr.sin_addr), addr_buffer, 46);
+#else
+  char addr_buffer[16];
+  inet_ntop(AF_INET, &(addr.sin_addr), addr_buffer, 16);
+#endif
+
+  printf("listening on %s:%d.\n", addr_buffer, port);
 
   while (rdma_get_cm_event(ec, &event) == 0) {
     struct rdma_cm_event event_copy;
@@ -278,8 +286,10 @@ int on_event(struct rdma_cm_event *event)
     r = on_connection(event->id->context);
   else if (event->event == RDMA_CM_EVENT_DISCONNECTED)
     r = on_disconnect(event->id);
-  else
+  else {
+    fprintf(stderr, "event number: %d\n", event->event);
     die("on_event: unknown event.");
+  }
 
   return r;
 }

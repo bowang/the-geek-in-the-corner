@@ -8,7 +8,11 @@ static void usage(const char *argv0);
 
 int main(int argc, char **argv)
 {
+#if _USE_IPV6
   struct sockaddr_in6 addr;
+#else
+  struct sockaddr_in addr;
+#endif
   struct rdma_cm_event *event = NULL;
   struct rdma_cm_id *listener = NULL;
   struct rdma_event_channel *ec = NULL;
@@ -25,7 +29,11 @@ int main(int argc, char **argv)
     usage(argv[0]);
 
   memset(&addr, 0, sizeof(addr));
+#if _USE_IPV6
   addr.sin6_family = AF_INET6;
+#else
+  addr.sin_family = AF_INET;
+#endif
 
   TEST_Z(ec = rdma_create_event_channel());
   TEST_NZ(rdma_create_id(ec, &listener, NULL, RDMA_PS_TCP));
